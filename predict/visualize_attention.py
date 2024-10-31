@@ -1,37 +1,3 @@
-# Publication:  "Protein Docking Model Evaluation by Graph Neural Networks", Xiao Wang, Sean T Flannery and Daisuke Kihara,  (2020)
-
-#GNN-Dove is a computational tool using graph neural network that can evaluate the quality of docking protein-complexes.
-
-#Copyright (C) 2020 Xiao Wang, Sean T Flannery, Daisuke Kihara, and Purdue University.
-
-#License: GPL v3 for academic use. (For commercial use, please contact us for different licensing.)
-
-#Contact: Daisuke Kihara (dkihara@purdue.edu)
-
-#
-
-# This program is free software: you can redistribute it and/or modify
-
-# it under the terms of the GNU General Public License as published by
-
-# the Free Software Foundation, version 3.
-
-#
-
-# This program is distributed in the hope that it will be useful,
-
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-
-# GNU General Public License V3 for more details.
-
-#
-
-# You should have received a copy of the GNU v3.0 General Public License
-
-# along with this program.  If not, see https://www.gnu.org/licenses/gpl-3.0.en.html.
-
 import os
 from ops.os_operation import mkdir
 import shutil
@@ -68,6 +34,7 @@ def visualize_attention(input_path,params):
     mkdir(save_path)
     save_path = os.path.join(save_path, "Fold_"+str(params['fold'])+"_Result")
     mkdir(save_path)
+
     input_path=os.path.abspath(input_path)
     split_name=os.path.split(input_path)[1]
     original_pdb_name=split_name
@@ -97,54 +64,6 @@ def visualize_attention(input_path,params):
     tmp_save_path2 = os.path.join(save_path, "attention2.npy")
     np.save(tmp_save_path1, Final_atten1)
     np.save(tmp_save_path2, Final_atten2)
-    receptor_path=os.path.join(save_path,"Input.rinterface")
-    ligand_path=os.path.join(save_path,"Input.linterface")
-    rcount = 0
-    with open(receptor_path, "r") as file:
-        line = file.readline()
-        while line:
-            if len(line) > 0 and line[:4] == "ATOM":
-                rcount += 1
-            line = file.readline()
-    lcount = 0
-    with open(ligand_path, "r") as file:
-        line = file.readline()
-        while line:
-            if len(line) > 0 and line[:4] == "ATOM":
-                lcount += 1
-            line = file.readline()
-    attention1=Final_atten1
-    attention2=Final_atten2
-    all_atom = rcount + lcount
-    if len(attention1) == 1:
-        attention1 = attention1[0]
-        attention2 = attention2[0]
-    print("number of atoms total %d" % all_atom)
-    print("attention shape", attention1.shape)
-    assert all_atom == len(attention1) and all_atom == len(attention2)
-    attention1 = np.sum(attention1, axis=1)
-    attention2 = np.sum(attention2, axis=1)
-    new_receptor_path1 = os.path.join(save_path, "attention1_receptor.pdb")
-    new_ligand_path1 = os.path.join(save_path, "attention1_ligand.pdb")
-    new_receptor_path2 = os.path.join(save_path, "attention2_receptor.pdb")
-    new_ligand_path2 = os.path.join(save_path, "attention2_ligand.pdb")
-    Write_Attention(receptor_path, new_receptor_path1, new_receptor_path2, attention1[:rcount], attention2[:rcount])
-    Write_Attention(ligand_path, new_ligand_path1, new_ligand_path2, attention1[rcount:], attention2[rcount:])
 
-
-def Write_Attention(read_path,w_path1,w_path2,attention1,attention2):
-    count_atom=0
-    with open(w_path1,'w') as wfile1:
-        with open(w_path2,'w') as wfile2:
-            with open(read_path,'r') as rfile:
-                line=rfile.readline()
-                while line:
-                    if len(line) > 0 and line[:4] == "ATOM":
-                        tmp_atten1=attention1[count_atom]
-                        tmp_atten2=attention2[count_atom]
-                        wline1=line[:60]+"%6.2f\n"%tmp_atten1
-                        wline2=line[:60]+"%6.2f\n"%tmp_atten2
-                        wfile1.write(wline1)
-                        wfile2.write(wline2)
-                        count_atom+=1
-                    line=rfile.readline()
+    atom_count = input_file[1]
+    print(f'Atom Count : {atom_count}')

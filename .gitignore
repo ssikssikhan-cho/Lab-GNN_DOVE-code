@@ -1,2 +1,7 @@
 .idea/
 .DS_Store
+
+Predict_Result/
+Predict_Result/
+Predict_Result/Multi_Target/Fold_-1_Result/input/correct/Input.npz
+Predict_Result/Multi_Target/Fold_-1_Result/input/incorrect/Input.npz

@@ -1,38 +1,3 @@
-# Publication:  "Protein Docking Model Evaluation by Graph Neural Networks", Xiao Wang, Sean T Flannery and Daisuke Kihara,  (2020)
-
-#GNN-Dove is a computational tool using graph neural network that can evaluate the quality of docking protein-complexes.
-
-#Copyright (C) 2020 Xiao Wang, Sean T Flannery, Daisuke Kihara, and Purdue University.
-
-#License: GPL v3 for academic use. (For commercial use, please contact us for different licensing.)
-
-#Contact: Daisuke Kihara (dkihara@purdue.edu)
-
-#
-
-# This program is free software: you can redistribute it and/or modify
-
-# it under the terms of the GNU General Public License as published by
-
-# the Free Software Foundation, version 3.
-
-#
-
-# This program is distributed in the hope that it will be useful,
-
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-
-# GNU General Public License V3 for more details.
-
-#
-
-# You should have received a copy of the GNU v3.0 General Public License
-
-# along with this program.  If not, see https://www.gnu.org/licenses/gpl-3.0.en.html.
-
-
 import torch
 import torch.nn.functional as F
 import torch.nn as nn
@@ -82,15 +47,15 @@ class GNN_Model(nn.Module):
         c_hs = torch.sigmoid(c_hs)
 
         return c_hs
-    def Formulate_Adj2(self,c_adjs2,c_valid,atom_list,device):
+    def Formulate_Adj2(self,c_adjs2,atom_list,device):
         study_distance = c_adjs2.clone().detach().to(device)  # only focused on where there exist atoms, ignore the area filled with 0
         study_distance = torch.exp(-torch.pow(study_distance - self.mu.expand_as(study_distance), 2) / self.dev)
         filled_value = torch.Tensor([0]).expand_as(study_distance).to(device)
         for batch_idx in range(len(c_adjs2)):
-            num_atoms = int(atom_list[batch_idx])
-            count_receptor = len(c_valid[batch_idx].nonzero())
-            c_adjs2[batch_idx,:count_receptor,count_receptor:num_atoms]=torch.where(c_adjs2[batch_idx,:count_receptor,count_receptor:num_atoms]<=10,study_distance[batch_idx,:count_receptor,count_receptor:num_atoms],filled_value[batch_idx,:count_receptor,count_receptor:num_atoms])
-            c_adjs2[batch_idx,count_receptor:num_atoms,:count_receptor]=c_adjs2[batch_idx,:count_receptor,count_receptor:num_atoms].t()
+            num_atoms = int(atom_list[batch_idx][0].item()) if isinstance(atom_list[batch_idx], torch.Tensor) else int(atom_list[batch_idx])
+            c_adjs2[batch_idx, :num_atoms, :num_atoms]=torch.where(c_adjs2[batch_idx, :num_atoms, :num_atoms]<=10,
+                                                                   study_distance[batch_idx,:num_atoms, :num_atoms],
+                                                                   filled_value[batch_idx, :num_atoms, num_atoms])
         return c_adjs2
 
     def get_attention_weight(self,data):
@@ -129,7 +94,7 @@ class GNN_Model(nn.Module):
         #get data
         c_hs, c_adjs1, c_adjs2, c_valid, num_atoms = data
         c_hs = self.embede(c_hs)
-        c_adjs2=self.Formulate_Adj2(c_adjs2,c_valid,num_atoms,device)
+        c_adjs2=self.Formulate_Adj2(c_adjs2,c_valid,device)
         #then do the gate
         c_hs=self.embede_graph((c_hs,c_adjs1,c_adjs2))
         #if self.params['debug']:
@@ -142,7 +107,7 @@ class GNN_Model(nn.Module):
     def test_model(self, data,device):
         c_hs, c_adjs1, c_adjs2, c_valid, num_atoms = data
         c_hs = self.embede(c_hs)
-        c_adjs2 = self.Formulate_Adj2(c_adjs2, c_valid, num_atoms,device)
+        c_adjs2 = self.Formulate_Adj2(c_adjs2, c_valid, device)
         # then do the gate
         c_hs = self.embede_graph((c_hs, c_adjs1, c_adjs2))
         # sum based on the atoms
@@ -153,7 +118,7 @@ class GNN_Model(nn.Module):
     def test_model_final(self,data,device):
         c_hs, c_adjs1, c_adjs2, c_valid, num_atoms = data
         c_hs = self.embede(c_hs)
-        c_adjs2 = self.Formulate_Adj2(c_adjs2, c_valid, num_atoms, device)
+        c_adjs2 = self.Formulate_Adj2(c_adjs2, c_valid, device)
         attention1, attention2 = self.get_attention_weight((c_hs, c_adjs1, c_adjs2))
         # then do the gate
         c_hs = self.embede_graph((c_hs, c_adjs1, c_adjs2))
@@ -165,7 +130,7 @@ class GNN_Model(nn.Module):
     def eval_model_attention(self,data,device):
         c_hs, c_adjs1, c_adjs2, c_valid, num_atoms = data
         c_hs = self.embede(c_hs)
-        c_adjs2 = self.Formulate_Adj2(c_adjs2, c_valid, num_atoms, device)
+        c_adjs2 = self.Formulate_Adj2(c_adjs2, c_valid, device)
         attention1,attention2 = self.get_attention_weight((c_hs, c_adjs1, c_adjs2))
         return attention1,attention2
     def feature_extraction(self,c_hs):
@@ -180,7 +145,7 @@ class GNN_Model(nn.Module):
     def model_gnn_feature(self, data,device):
         c_hs, c_adjs1, c_adjs2, c_valid, num_atoms = data
         c_hs = self.embede(c_hs)
-        c_adjs2 = self.Formulate_Adj2(c_adjs2, c_valid, num_atoms,device)
+        c_adjs2 = self.Formulate_Adj2(c_adjs2, c_valid,device)
         # then do the gate
         c_hs = self.embede_graph((c_hs, c_adjs1, c_adjs2))
         # sum based on the atoms
