@@ -53,6 +53,7 @@ class GNN_Model(nn.Module):
         filled_value = torch.Tensor([0]).expand_as(study_distance).to(device)
         for batch_idx in range(len(c_adjs2)):
             num_atoms = int(atom_list[batch_idx][0].item()) if isinstance(atom_list[batch_idx], torch.Tensor) else int(atom_list[batch_idx])
+            #num_atoms = int(atom_list[batch_idx])
             c_adjs2[batch_idx, :num_atoms, :num_atoms]=torch.where(c_adjs2[batch_idx, :num_atoms, :num_atoms]<=10,
                                                                    study_distance[batch_idx,:num_atoms, :num_atoms],
                                                                    filled_value[batch_idx, :num_atoms, num_atoms])

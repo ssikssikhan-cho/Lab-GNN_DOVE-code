@@ -17,7 +17,7 @@ def Extract_Interface(pdb_path):
         while line[0:4]!='ATOM':
             line=file.readline()
         while line :
-            if line.startswith('ATOM'):
+            if line.startswitch('ATOM'):
                 x,y,z=float(line[30:38]), float(line[38:46]), float(line[46:54])
                 atom_type=line[13:16].strip()
                 atom_list.append(line)
